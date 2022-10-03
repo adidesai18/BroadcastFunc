@@ -11,7 +11,7 @@ from firebase_admin import db
 app = FastAPI()
 url = "https://api.ultramsg.com/instance14131/messages/chat"
 cred_obj = firebase_admin.credentials.Certificate('firebase_credentials.json')
-default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':os.environ.get("RTDB_URL")})
+default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':"https://easysenddemo-default-rtdb.asia-southeast1.firebasedatabase.app/"})
 dataBase = firestore.client()
 ref_RTDB = db.reference()
 parameters=["receiver","message","attachments"]
@@ -54,7 +54,6 @@ def send_message(request_json,receiver,ref,decode_msg,broadcast_number):
                                 return {"error":response.json()["error"]}
                 except:
                         pass
-        broadcast_number+=1
         ref_RTDB.child(f"Broadcast/{ref.id}").update({"send_count":broadcast_number})
         sleep(5)
 
@@ -113,6 +112,7 @@ def broadcast(Json_data):
                 })
                 for receiver in Json_data["receiver"]:
                     send_message(Json_data,receiver,ref,decode_msg,broadcast_number)
+                    broadcast_number+=1
                 ref_RTDB.child(f"Broadcast/{ref.id}").update({"is_task_finished":True})
                 return {"message":"Sent Succesfully"}
     else:
