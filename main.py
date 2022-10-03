@@ -32,7 +32,8 @@ def group_List():
 
 def send_message(request_json,receiver,ref,decode_msg,broadcast_number):
         if request_json["message"]!="":
-                payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&body="+decode_msg
+                current_time=datetime.now()
+                payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&body="+current_time
                 try:
                         response = requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/chat", data=payload, headers=ultramsg_headers,timeout=0.5)
                         if response.text[2]=="e" :
