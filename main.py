@@ -36,7 +36,7 @@ def send_message(request_json,receiver,ref,decode_msg,broadcast_number):
                 print(current_time)
                 payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&body="+decode_msg
                 try:
-                        response = requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/chat", data=payload, headers=ultramsg_headers,timeout=0.5)
+                        response = requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/chat", data=payload, headers=ultramsg_headers)
                         if response.text[2]=="e" :
                                 return {"error":response.json()["error"]}
                 except:
@@ -45,19 +45,18 @@ def send_message(request_json,receiver,ref,decode_msg,broadcast_number):
                 try:
                         if attachment["send_as"]=="FileExtensionType.image":
                                 img_payload= "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&image="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/image", headers=ultramsg_headers,data=img_payload,timeout=0.5)
+                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/image", headers=ultramsg_headers,data=img_payload)
                         elif attachment["send_as"]=="FileExtensionType.video":
                                 video_payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&video="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/video", data=video_payload, headers=ultramsg_headers,timeout=0.5)
+                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/video", data=video_payload, headers=ultramsg_headers)
                         else:
                                 payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+receiver+",&filename="+attachment["file_name"]+"&document="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/document", data=payload, headers=ultramsg_headers,timeout=0.5)
+                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/document", data=payload, headers=ultramsg_headers)
                         if response.text[2]=="e" :
                                 return {"error":response.json()["error"]}
                 except:
                         pass
         ref_RTDB.child(f"Broadcast/{ref.id}").update({"send_count":broadcast_number})
-        sleep(5)
 
 def broadcast(Json_data):
     if Json_data and all(k in Json_data for k in parameters):
