@@ -1,0 +1,4 @@
+requests
+firebase-admin
+fastapi
+uvicorn
