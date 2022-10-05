@@ -28,6 +28,7 @@ def group_List():
         for i in response.json():
                 if i["isGroup"]==True:
                         groups_list.append(i["id"])
+        print(group_List)
         return group_List
 
 def start_broadcast(firestore_ref,rtdb_ref,broadcast_name,sender_list,json_data,broadcast_number,decode_msg):
@@ -71,7 +72,8 @@ def broadcast(json_data):
         BroadcastNumber=0
         if json_data and all(k in json_data for k in parameters):
                 if json_data["onlyGroups"]=="true":
-                        start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name="Groups",sender_list=group_List(),json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage)
+                        SenderList=group_List()
+                        start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name="Groups",sender_list=SenderList,json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage)
                 else:
                         BroadcastName=",".join(json_data["receiver"])
                         start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name=BroadcastName,sender_list=json_data["receiver"],json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage)
