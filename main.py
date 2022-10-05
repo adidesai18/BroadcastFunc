@@ -19,63 +19,64 @@ ultramsg_headers = {'content-type': 'application/x-www-form-urlencoded'}
 
 
 def group_List():
-        list=[]
-        url = "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/contacts"
-        querystring = {"token":os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")}
-        response = requests.request("GET", url, headers=ultramsg_headers, params=querystring)
-        for i in response.json():
-                if i["isGroup"]==True:
-                        list.append(i["id"])
-        return list
+    list=[]
+    url = "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/contacts"
+    querystring = {"token":os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")}
+    response = requests.request("GET", url, headers=ultramsg_headers, params=querystring)
+    for i in response.json():
+            if i["isGroup"]==True:
+                    list.append(i["id"])
+    return list
 
-def start_broadcast(firestore_ref,rtdb_ref,broadcast_name,sender_list,json_data,broadcast_number,decode_msg):
-        firestore_ref.set({
-                "broadcast_name": broadcast_name,
-                "created_at": datetime.now(tz=ZoneInfo('Asia/Kolkata'))
-                })
-        rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({
-                "total_receiver":len(sender_list),
-                "is_task_finished":False,
-                "send_count":0,
-        })
-        for Receiver in sender_list:
-                if json_data["message"]!="":
-                        payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&body="+decode_msg
-                        response = requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/chat", data=payload, headers=ultramsg_headers)
-                        if response.text[2]=="e" :
-                                        return {"error":response.json()["error"]}
-                for attachment in json_data["attachments"]:
-                        if attachment["send_as"]=="FileExtensionType.image":
-                                img_payload= "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&image="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/image", headers=ultramsg_headers,data=img_payload)
-                        elif attachment["send_as"]=="FileExtensionType.video":
-                                video_payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&video="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/video", data=video_payload, headers=ultramsg_headers)
-                        else:
-                                payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&filename="+attachment["file_name"]+"&document="+attachment["URL"]
-                                response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/document", data=payload, headers=ultramsg_headers)
-                        if response.text[2]=="e" :
-                                return {"error":response.json()["error"]}
-                broadcast_number+=1
-                rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({"send_count":broadcast_number})
-                print("send time "+str(datetime.now()))
-                sleep(5)
-                print("Final time "+str(datetime.now()))
-        rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({"is_task_finished":True})
+def start_broadcast(firestore_ref,rtdb_ref,broadcast_name,sender_list,json_data,broadcast_number,decode_msg,delay):
+    firestore_ref.set({
+            "broadcast_name": broadcast_name,
+            "created_at": datetime.now(tz=ZoneInfo('Asia/Kolkata'))
+            })
+    rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({
+            "total_receiver":len(sender_list),
+            "is_task_finished":False,
+            "send_count":0,
+    })
+    for Receiver in sender_list:
+            if json_data["message"]!="":
+                    payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&body="+decode_msg
+                    response = requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/chat", data=payload, headers=ultramsg_headers)
+                    if response.text[2]=="e" :
+                                    return {"error":response.json()["error"]}
+            for attachment in json_data["attachments"]:
+                    if attachment["send_as"]=="FileExtensionType.image":
+                            img_payload= "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&image="+attachment["URL"]
+                            response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/image", headers=ultramsg_headers,data=img_payload)
+                    elif attachment["send_as"]=="FileExtensionType.video":
+                            video_payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&video="+attachment["URL"]
+                            response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/video", data=video_payload, headers=ultramsg_headers)
+                    else:
+                            payload = "token="+os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")+"&to="+Receiver+",&filename="+attachment["file_name"]+"&document="+attachment["URL"]
+                            response=requests.request("POST", "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/messages/document", data=payload, headers=ultramsg_headers)
+                    if response.text[2]=="e" :
+                            return {"error":response.json()["error"]}
+            broadcast_number+=1
+            rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({"send_count":broadcast_number})
+            print("send time "+str(datetime.now()))
+            sleep(delay)
+            print("Final time "+str(datetime.now()))
+    rtdb_ref.child(f"Broadcast/{firestore_ref.id}").update({"is_task_finished":True})
 
 def broadcast(json_data):
-        DecodeMessage=json_data["message"].encode('utf-8').decode("latin-1")
-        FirestoreRef=DataBase.collection("products").document()
-        BroadcastNumber=0
-        if json_data and all(k in json_data for k in parameters):
-                if json_data["onlyGroups"]=="true":
-                        SenderList=group_List()
-                        start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name="Groups",sender_list=SenderList,json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage)
-                else:
-                        BroadcastName=",".join(json_data["receiver"])
-                        start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name=BroadcastName,sender_list=json_data["receiver"],json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage)
-        else:
-                return {"error":"Missing parameters(receiver,message,attachments)"}
+    DecodeMessage=json_data["message"].encode('utf-8').decode("latin-1")
+    Delay=json_data["delay"]
+    FirestoreRef=DataBase.collection("products").document()
+    BroadcastNumber=0
+    if json_data and all(k in json_data for k in parameters):
+            if json_data["onlyGroups"]=="true":
+                SenderList=group_List()
+                start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name="Groups",sender_list=SenderList,json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage,delay=Delay)
+            else:
+                BroadcastName=",".join(json_data["receiver"])
+                start_broadcast(firestore_ref=FirestoreRef,rtdb_ref=RtdbRef,broadcast_name=BroadcastName,sender_list=json_data["receiver"],json_data=json_data,broadcast_number=BroadcastNumber,decode_msg=DecodeMessage,delay=Delay)
+    else:
+            return {"error":"Missing parameters(receiver,message,attachments)"}
 
 @app.get("/healthz")
 async def root():
@@ -90,6 +91,5 @@ async def get_body(request: Request):
 @app.post("/")
 async def get_body(background_task:BackgroundTasks,request: Request):
         JsonData=await request.json()
-        print("Starting time "+str(datetime.now()))
         background_task.add_task(broadcast,JsonData)
         return "Message Sent"
