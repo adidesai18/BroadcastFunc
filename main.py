@@ -7,8 +7,6 @@ import firebase_admin
 from firebase_admin import firestore
 from zoneinfo import ZoneInfo
 from firebase_admin import db
-# import asyncio
-# import aiohttp
 
 app = FastAPI()
 url = "https://api.ultramsg.com/instance14131/messages/chat"
