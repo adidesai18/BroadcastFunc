@@ -21,15 +21,14 @@ ultramsg_headers = {'content-type': 'application/x-www-form-urlencoded'}
 
 
 def group_List():
-        groups_list=[]
+        list=[]
         url = "https://api.ultramsg.com/"+os.environ.get("ULTRAMSG_INSTANCE_ID")+"/contacts"
         querystring = {"token":os.environ.get("ULTRAMSG_WHATSAPP_TOKEN")}
         response = requests.request("GET", url, headers=ultramsg_headers, params=querystring)
         for i in response.json():
                 if i["isGroup"]==True:
-                        groups_list.append(i["id"])
-        print(group_List)
-        return group_List
+                        list.append(i["id"])
+        return list
 
 def start_broadcast(firestore_ref,rtdb_ref,broadcast_name,sender_list,json_data,broadcast_number,decode_msg):
         firestore_ref.set({
