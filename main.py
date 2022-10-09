@@ -11,7 +11,7 @@ from firebase_admin import db
 app = FastAPI()
 url = "https://api.ultramsg.com/instance14131/messages/chat"
 cred_obj = firebase_admin.credentials.Certificate('firebase_credentials.json')
-default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':"https://easysenddemo-default-rtdb.asia-southeast1.firebasedatabase.app/"})
+default_app = firebase_admin.initialize_app(cred_obj, {'databaseURL':"https://easysend-1dcdc-default-rtdb.asia-southeast1.firebasedatabase.app/"})
 DataBase = firestore.client()
 RtdbRef = db.reference()
 parameters=["receiver","message","attachments"]
